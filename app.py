@@ -830,3 +830,144 @@ else:
 
 # Option to get more facts in order
 st.write("If you want to know more, just press 'Next Fact' to move through each fact one by one! 💙")
+
+import streamlit as st
+import random
+import time
+
+# 30 Cybersecurity facts and explanations
+facts = [
+    {"fact": "A system that monitors and controls incoming and outgoing network traffic.", "answer": "firewall", "explanation": "A firewall is a network security system that monitors and controls incoming and outgoing network traffic to prevent unauthorized access."},
+    {"fact": "A type of attack where many systems flood a target with traffic.", "answer": "DDoS attack", "explanation": "A Distributed Denial of Service (DDoS) attack floods a target system with massive traffic, causing it to slow down or crash."},
+     {"fact": "A secure connection used to access a remote network safely.", "answer": "VPN", "explanation": "A VPN (Virtual Private Network) provides secure, encrypted access to remote networks over the internet."},
+    {"fact": "A decoy system designed to lure attackers for study.", "answer": "honeypot", "explanation": "A honeypot is a security mechanism used to attract and trap cyber attackers to study their methods."},
+    {"fact": "A technique where attackers insert malicious code into an input field.", "answer": "SQL injection", "explanation": "SQL injection is an attack where attackers insert harmful SQL code into input fields to manipulate a website's database."},
+    {"fact": "A system used to detect suspicious network activity.", "answer": "IDS", "explanation": "Intrusion Detection Systems (IDS) monitor network traffic for unusual patterns and alert administrators to potential threats."},
+    {"fact": "An attack that involves trying all possible passwords until the correct one is found.", "answer": "brute-force attack", "explanation": "A brute-force attack attempts all possible combinations of passwords until the correct one is found."},
+    {"fact": "A cryptographic protocol used to secure internet communication.", "answer": "SSL", "explanation": "Secure Sockets Layer (SSL) is a cryptographic protocol that encrypts data transferred between web servers and browsers."},
+    {"fact": "An attack that exploits an unknown vulnerability in software.", "answer": "zero-day exploit", "explanation": "A zero-day exploit takes advantage of an unknown vulnerability in software, before developers can patch it."},
+    {"fact": "A type of scam where attackers pretend to be someone trustworthy to steal information.", "answer": "phishing attack", "explanation": "Phishing attacks involve cybercriminals impersonating trusted entities to trick victims into revealing sensitive information."},
+    {"fact": "Malicious software designed to damage or gain unauthorized access to computer systems.", "answer": "malware", "explanation": "Malware is software designed to harm or gain unauthorized access to systems, including viruses, worms, and trojans."},
+    {"fact": "A security protocol used to protect online communication.", "answer": "TLS", "explanation": "Transport Layer Security (TLS) is used to secure communication over the internet by encrypting data."},
+    {"fact": "A prolonged and targeted cyberattack aimed at stealing data or compromising systems.", "answer": "APT", "explanation": "Advanced Persistent Threats (APTs) are long-term, targeted cyberattacks designed to steal data or infiltrate systems."},
+    {"fact": "Simulated cyberattacks to identify vulnerabilities in a system before exploitation.", "answer": "penetration testing", "explanation": "Penetration testing simulates attacks to identify vulnerabilities in systems before malicious actors can exploit them."},
+    {"fact": "The process of converting data into a secure, unreadable format.", "answer": "encryption", "explanation": "Encryption converts readable data into a scrambled format to prevent unauthorized access."},
+    {"fact": "A method requiring more than one form of verification to access a system.", "answer": "multi-factor authentication", "explanation": "Multi-factor authentication (MFA) requires more than one form of verification to ensure a user's identity."},
+    {"fact": "A network of infected computers controlled by a cybercriminal.", "answer": "botnet", "explanation": "A botnet is a network of compromised devices controlled remotely by cybercriminals to carry out malicious activities."},
+    {"fact": "A method used to verify the authenticity and integrity of a document.", "answer": "digital signature", "explanation": "A digital signature authenticates the sender and ensures the document's integrity by using encryption."},
+    {"fact": "A feature that prevents traffic from leaking if the VPN connection drops.", "answer": "VPN kill switch", "explanation": "A VPN kill switch blocks internet traffic if the VPN connection drops, preventing data leaks."},
+    {"fact": "The act of manipulating people into revealing confidential information.", "answer": "social engineering", "explanation": "Social engineering tricks people into divulging confidential information by exploiting their trust."},
+    {"fact": "The three core principles of cybersecurity: confidentiality, integrity, and availability.", "answer": "CIA triad", "explanation": "The CIA triad represents the core principles of cybersecurity: confidentiality, integrity, and availability."},
+    {"fact": "Malicious software that encrypts a victim's data and demands a ransom.", "answer": "ransomware", "explanation": "Ransomware encrypts a victim’s data and demands a ransom for the decryption key."},
+    {"fact": "A deceptive technique where attackers impersonate legitimate websites to steal user credentials.", "answer": "spoofing", "explanation": "Spoofing tricks victims into thinking they are on legitimate sites or interacting with trusted entities."},
+    {"fact": "A cryptographic hash function used to secure sensitive data.", "answer": "SHA", "explanation": "Secure Hash Algorithm (SHA) is used for hashing sensitive data for integrity verification."},
+    {"fact": "A unique identifier for your device on a network.", "answer": "IP address", "explanation": "An IP address uniquely identifies devices on a network to enable communication."},
+    {"fact": "The process of verifying someone's identity before granting access.", "answer": "authentication", "explanation": "Authentication ensures only authorized users can access sensitive data or systems."},
+    {"fact": "A software tool that scans for vulnerabilities in a network.", "answer": "vulnerability scanner", "explanation": "Vulnerability scanners help identify weaknesses in networks or systems before attackers exploit them."},
+    {"fact": "A malicious software disguised as legitimate software.", "answer": "trojan horse", "explanation": "A Trojan horse appears to be a legitimate program but performs malicious actions when executed."},
+    {"fact": "An attack that intercepts and relays communications between two parties.", "answer": "man-in-the-middle attack", "explanation": "A man-in-the-middle attack intercepts communications between two parties, often to steal sensitive data."},
+    {"fact": "A unique, randomly generated code used to verify the authenticity of a transaction.", "answer": "OTP", "explanation": "A one-time password (OTP) is a temporary code used to authenticate users and secure transactions."}
+]
+
+# Initialize session state
+if "card_index" not in st.session_state:
+    st.session_state.card_index = 0
+    st.session_state.score = 0
+    st.session_state.start_time = None
+    st.session_state.answer_given = False
+
+# Function to get current flashcard
+def get_current_fact():
+    return facts[st.session_state.card_index]
+
+# Timer check function
+def time_up(start_time):
+    elapsed_time = time.time() - start_time
+    return elapsed_time >= 60  # 60 seconds limit to answer
+
+# Check if answers are close (case-insensitive, strips spaces)
+def is_answer_correct(user_answer, correct_answer):
+    user_answer = user_answer.strip().lower()
+    correct_answer = correct_answer.strip().lower()
+    return user_answer == correct_answer
+
+# Game Interface
+st.title("Cybersecurity Flashcard Game 🕹️")
+st.write("Welcome, **Cyber Hero**! Ready to prove your skills in cybersecurity? Let's start with a challenge!")
+
+# Player's name input
+player_name = st.text_input("Enter your name, Cyber Hero:")
+if player_name:
+    st.session_state.player_name = player_name
+    st.write(f"Hey, **{player_name}**, let's go! 🔥")
+
+# Get current flashcard
+fact_choice = get_current_fact()
+
+# Flashcard styling with animation and detailed explanation
+st.markdown("""
+    <style>
+    @keyframes sway {
+        0% { transform: rotate(0deg); }
+        50% { transform: rotate(5deg); }
+        100% { transform: rotate(0deg); }
+    }
+    .card {
+        background-color: #003366;
+        color: white;
+        padding: 50px;
+        border-radius: 20px;
+        font-size: 24px;
+        box-shadow: 3px 5px 10px rgba(0,0,0,0.5);
+        border: 5px solid #333333; /* Black Velvet border */
+        width: 500px; /* Big square card */
+        margin: 0 auto;
+        animation: sway 1s ease-in-out infinite;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Show question (front of the card)
+st.markdown(f'<div class="card">**Fact #{st.session_state.card_index + 1}:** {fact_choice["fact"]}</div>', unsafe_allow_html=True)
+
+# Start timer if it isn't already
+if st.session_state.start_time is None:
+    st.session_state.start_time = time.time()
+
+# Timer countdown
+time_left = max(0, 60 - int(time.time() - st.session_state.start_time))
+st.write(f"⏳ Time Left: {time_left}s")
+
+# Player inputs their answer
+user_answer = st.text_input("What's your answer?", key="answer_input")
+
+# Button to check the answer
+if not st.session_state.answer_given:
+    if st.button("Check Answer"):
+        # Check answer and feedback
+        if is_answer_correct(user_answer, fact_choice["answer"]):
+            st.session_state.score += 1
+            st.success(f"Correct! 💥 {fact_choice['answer']} is right! {fact_choice['explanation']}")
+        else:
+            st.error(f"Oops! The correct answer was **{fact_choice['answer']}**. {fact_choice['explanation']}")
+        st.session_state.answer_given = True
+
+# Button to move to next flashcard
+if st.session_state.answer_given and st.button("Next Flashcard"):
+    if st.session_state.card_index < len(facts) - 1:
+        st.session_state.card_index += 1
+        st.session_state.start_time = time.time()
+        st.session_state.answer_given = False
+    else:
+        st.write(f"Game Over! Your Score: {st.session_state.score}/{len(facts)}")
+        if st.session_state.score == len(facts):
+            st.success("You are a Cyber Hero! 🏆")
+        elif st.session_state.score >= 10:
+            st.success("Not bad! Keep learning! 🎓")
+        else:
+            st.write("Better luck next time, Cyber Hero! 💪")
+
+# Display current score
+st.write(f"Your current score: {st.session_state.score}")
+
+
